@@ -9,7 +9,7 @@ GitHub Actions is powerful, but writing complex automation logic in workflow YAM
 - **YAML-driven flows** — define multi-step automation pipelines in a single `automation.yml`
 - **Multi-language plugins** — write plugins in TypeScript, Python, Shell, Node, or Docker
 - **Secret resolution** — `${{ secrets.XXX }}` references resolved automatically with log masking
-- **24 built-in plugins** — RSS, email, Telegram, Discord, Slack, WeCom, Feishu, GitHub ops, AI, and more
+- **25 built-in plugins** — RSS, email, Telegram, Discord, Slack, WeCom, Feishu, GitHub ops, AI, and more
 - **TypeScript SDK** — `definePlugin()` with Zod input validation and automatic JSON I/O
 - **Composite Action** — drop-in `uses: linanwanttodo/BareZen-Automation@v1` for any repository
 
@@ -58,10 +58,22 @@ flows:
         message: "scan finished"
 ```
 
-Steps run in order. An earlier step's output can be bound with
-`input: { <param>: <outputName> }`, which passes that step's whole output
-object in as `<param>` — there is no field-path or template resolution yet, so a
-step returning `{ articles: [...] }` cannot feed one that needs a `string`.
+Steps run in order, and a step reads an earlier one's output with `input:`:
+
+```yaml
+    - plugin: text-template
+      input: { vars: frontpage }        # whole output object bound to `vars`
+      inputs:
+        template: "{{#each articles}}- {{title}}\n{{/each}}"
+      output: digest
+
+    - plugin: telegram
+      input: { message: digest.text }   # field path into an earlier step
+```
+
+`text-template` exists because every step output is an object and most sinks
+want a string. See [Configuration](docs/configuration.md#referencing-earlier-output)
+for the reference syntax and its limits.
 
 ### 3. Add secrets
 
@@ -89,7 +101,7 @@ barezen-automation/
 │   ├── core/                     # Runtime engine, config, plugin loader
 │   ├── sdk/                      # TypeScript plugin SDK
 │   └── cli/                      # Command-line interface
-├── plugins/                      # 24 built-in plugins
+├── plugins/                      # 25 built-in plugins
 │   └── rss/
 │       ├── plugin.yaml           # Manifest: runtime, entry, inputs, outputs
 │       ├── src/index.ts          # Source
@@ -112,7 +124,7 @@ barezen-automation/
 | Notification | `email`, `telegram`, `discord`, `slack`, `wecom`, `feishu` |
 | GitHub | `github-sync`, `github-star`, `github-release`, `github-issue`, `github-pr`, `github-label` |
 | AI | `ai-summary`, `ai-translate`, `ai-review`, `ai-classify`, `ai-chat` |
-| Utility | `condition`, `retry`, `schedule` |
+| Utility | `condition`, `retry`, `schedule`, `text-template` |
 
 ## Development
 

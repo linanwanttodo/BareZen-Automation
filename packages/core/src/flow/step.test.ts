@@ -103,6 +103,98 @@ describe("StepExecutor", () => {
     }
   });
 
+  it("resolves a dotted field path in record input references", async () => {
+    const reg = createPluginRegistry();
+    reg.register(makeDescriptor("ai-summary"));
+    const ctx = createFlowContext("flow", makeGitHubContext());
+    ctx.setOutput("news", { digest: "3 items", articles: [{ title: "A" }, { title: "B" }] });
+    const mgr = makeRuntimeManager((inputs) => ({
+      success: true,
+      data: { received: inputs.text },
+      durationMs: 1,
+    }));
+    const executor = createStepExecutor(mgr);
+    const step: FlowStep = { plugin: "ai-summary", input: { text: "news.digest" } };
+    const result = await executor.execute(step, 0, ctx, reg);
+    expect(result.result.success).toBe(true);
+    if (result.result.success) {
+      expect(result.result.data).toEqual({ received: "3 items" });
+    }
+  });
+
+  it("resolves an indexed field path", async () => {
+    const reg = createPluginRegistry();
+    reg.register(makeDescriptor("email"));
+    const ctx = createFlowContext("flow", makeGitHubContext());
+    ctx.setOutput("news", { articles: [{ title: "A" }, { title: "B" }] });
+    const mgr = makeRuntimeManager((inputs) => ({
+      success: true,
+      data: { received: inputs.body },
+      durationMs: 1,
+    }));
+    const executor = createStepExecutor(mgr);
+    const step: FlowStep = {
+      plugin: "email",
+      input: { body: "news.articles[1].title" },
+    };
+    const result = await executor.execute(step, 0, ctx, reg);
+    if (result.result.success) {
+      expect(result.result.data).toEqual({ received: "B" });
+    } else {
+      expect.fail(result.result.error.message);
+    }
+  });
+
+  it("resolves a field path in the string input form", async () => {
+    const reg = createPluginRegistry();
+    reg.register(makeDescriptor("email"));
+    const ctx = createFlowContext("flow", makeGitHubContext());
+    ctx.setOutput("news", { articles: [{ title: "A" }] });
+    const mgr = makeRuntimeManager((inputs) => ({
+      success: true,
+      data: { received: inputs.input },
+      durationMs: 1,
+    }));
+    const executor = createStepExecutor(mgr);
+    const step: FlowStep = { plugin: "email", input: "news.articles[0]" };
+    const result = await executor.execute(step, 0, ctx, reg);
+    if (result.result.success) {
+      expect(result.result.data).toEqual({ received: { title: "A" } });
+    } else {
+      expect.fail(result.result.error.message);
+    }
+  });
+
+  it("fails the step with the reference when a path does not resolve", async () => {
+    const reg = createPluginRegistry();
+    reg.register(makeDescriptor("email"));
+    const ctx = createFlowContext("flow", makeGitHubContext());
+    ctx.setOutput("news", { articles: [] });
+    const mgr = makeRuntimeManager(() => ({
+      success: true,
+      data: {},
+      durationMs: 1,
+    }));
+    const executor = createStepExecutor(mgr);
+    const step: FlowStep = { plugin: "email", input: { body: "news.articles[3].title" } };
+    const result = await executor.execute(step, 0, ctx, reg);
+    expect(result.result.success).toBe(false);
+    if (!result.result.success) {
+      expect(result.error ?? result.result.error.message).toContain("news.articles[3].title");
+    }
+  });
+
+  it("fails the step when the root key is absent", async () => {
+    const reg = createPluginRegistry();
+    reg.register(makeDescriptor("email"));
+    const ctx = createFlowContext("flow", makeGitHubContext());
+    const mgr = makeRuntimeManager(() => ({ success: true, data: {}, durationMs: 1 }));
+    const executor = createStepExecutor(mgr);
+    const step: FlowStep = { plugin: "email", input: { body: "missing.title" } };
+    const result = await executor.execute(step, 0, ctx, reg);
+    expect(result.result.success).toBe(false);
+  });
+
   it("stores output to context on success", async () => {
     const reg = createPluginRegistry();
     reg.register(makeDescriptor("rss"));

@@ -1,0 +1,17 @@
+name: text-template
+runtime: node
+entry: dist/index.js
+description: Render a Handlebars template against data from earlier steps
+inputs:
+  template:
+    required: true
+    type: string
+    description: Handlebars source; {{expr}} escapes, {{{expr}}} does not
+  vars:
+    required: false
+    type: object
+    description: Object made available to the template, usually bound via input
+outputs:
+  text:
+    type: string
+    description: Rendered text

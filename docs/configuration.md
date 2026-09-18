@@ -43,8 +43,16 @@ flows:
         url: https://example.com/feed.xml
       output: news        # Output key (stored in flow context)
 
-    - plugin: email       # Step 2
-      input: news         # Read from previous output
+    - plugin: text-template
+      input: { vars: news }          # Bind the whole previous output to `vars`
+      inputs:
+        template: |
+          {{#each articles}}- {{title}}
+          {{/each}}
+      output: digest
+
+    - plugin: email       # Step 3
+      input: { body: digest.text }   # Field path into an earlier step
       inputs:
         to: user@example.com
         subject: Daily Report
@@ -56,12 +64,29 @@ flows:
 |-------|------|----------|-------------|
 | `plugin` | string | Yes | Plugin name |
 | `inputs` | object | No | Direct input values |
-| `input` | string | No | Read inputs from a previous step's output |
+| `input` | string \| object | No | Bind a previous step's output to inputs; accepts field paths |
 | `output` | string | No | Store output in flow context under this key |
 | `if` | string | No | Condition expression (e.g., `true`, `false`) |
 | `continueOnError` | boolean | No | Continue to next step if this one fails (default: `false`) |
 | `retry` | object | No | Retry configuration |
 | `timeout` | number | No | Timeout in milliseconds |
+
+## Referencing Earlier Output
+
+`input` addresses values stored by an earlier step's `output`:
+
+```yaml
+input: news                      # binds the whole output to a parameter named `input`
+input: { body: news }            # binds the whole output to `body`
+input: { body: news.digest }     # field path: a nested value
+input: { body: news.items[0].title }   # list index, then field
+```
+
+Paths resolve against the previous outputs only; there is no expression
+language, arithmetic, or fallback syntax. `inputs` and `input` may appear on
+the same step, and `input` wins on a key collision. Because every step output
+is an object, rendering a list into a string is the `text-template` plugin's
+job.
 
 ## `retry` Configuration
 

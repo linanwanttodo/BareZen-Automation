@@ -6,4 +6,4 @@ inputs:
   text: { required: true, type: string }
   model: { required: false, type: string, default: gpt-4o-mini }
 outputs:
-  result: { type: object }
+  text: { type: string }

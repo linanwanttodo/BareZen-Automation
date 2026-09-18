@@ -4,6 +4,7 @@
 plugins:
   - condition
   - schedule
+  - text-template
 
 flows:
   smoke:
@@ -17,3 +18,17 @@ flows:
       inputs:
         cron: "0 9 * * *"
       output: tick
+
+    - plugin: text-template
+      inputs:
+        template: "digest of {{count}} items"
+        vars:
+          count: 3
+      output: digest
+
+    # Field path binding: reads the previous step's rendered string.
+    - plugin: text-template
+      input: { vars: digest }
+      inputs:
+        template: "forwarded: {{text}}"
+      output: forwarded
