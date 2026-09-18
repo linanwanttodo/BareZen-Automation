@@ -14,6 +14,19 @@ const ArticleSchema = z.object({
   guid: z.string().optional(),
 });
 
+/**
+ * Extract an entry's URL. RSS 2.0 carries a plain string; Atom carries
+ * attributes, which fast-xml-parser prefixes with "@_", and may repeat <link>.
+ */
+function pickLink(link: unknown): string {
+  if (typeof link === "string") return link;
+  const candidates = (Array.isArray(link) ? link : [link])
+    .filter((c): c is Record<string, unknown> => typeof c === "object" && c !== null)
+    .filter((c) => typeof c["@_href"] === "string");
+  const alternate = candidates.find((c) => c["@_rel"] === "alternate");
+  return String((alternate ?? candidates[0])?.["@_href"] ?? "");
+}
+
 export default definePlugin({
   name: "rss",
   inputs: z.object({
@@ -27,7 +40,15 @@ export default definePlugin({
       throw new Error(`Failed to fetch RSS feed: ${response.status} ${response.statusText}`);
     }
     const xml = await response.text();
-    const parser = new XMLParser({ ignoreAttributes: false });
+    // Ordinary &amp; counts against these budgets and feeds are full of it;
+    // the defaults (1000 expansions, 100000 chars) reject most real feeds.
+    const parser = new XMLParser({
+      ignoreAttributes: false,
+      processEntities: {
+        maxTotalExpansions: 100000,
+        maxExpandedLength: 5000000,
+      },
+    });
     const parsed = parser.parse(xml);
 
     const channel = parsed.rss?.channel ?? parsed.feed;
@@ -40,7 +61,7 @@ export default definePlugin({
       .slice(0, ctx.inputs.limit)
       .map((item) => ({
         title: String(item.title ?? ""),
-        link: typeof item.link === "string" ? item.link : String((item.link as { href?: string })?.href ?? ""),
+        link: pickLink(item.link),
         description: typeof item.description === "string" ? item.description : String(item.summary ?? ""),
         pubDate: String(item.pubDate ?? item.published ?? ""),
         guid: String(item.guid ?? item.id ?? ""),

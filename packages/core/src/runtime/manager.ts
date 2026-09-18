@@ -118,6 +118,27 @@ export function createRuntimeManager(): RuntimeManager {
         };
       }
 
+      let parsed: PluginOutputMessage | undefined;
+      let parseError: string | undefined;
+      try {
+        parsed = JSON.parse(result.stdout) as PluginOutputMessage;
+      } catch (err) {
+        parseError = err instanceof Error ? err.message : String(err);
+      }
+
+      // A structured failure outranks the exit code: plugins report errors this
+      // way and then exit non-zero, and dropping the message is undebuggable.
+      if (parsed !== undefined && parsed.success === false) {
+        return {
+          success: false,
+          error: {
+            kind: "plugin-failed",
+            message: parsed.error?.message ?? "plugin reported failure without message",
+          },
+          durationMs: result.durationMs,
+        };
+      }
+
       if (result.exitCode !== 0) {
         return {
           success: false,
@@ -130,35 +151,21 @@ export function createRuntimeManager(): RuntimeManager {
         };
       }
 
-      let parsed: PluginOutputMessage;
-      try {
-        parsed = JSON.parse(result.stdout) as PluginOutputMessage;
-      } catch (err) {
+      if (parsed === undefined) {
         return {
           success: false,
           error: {
             kind: "invalid-output",
             raw: result.stdout,
-            parseError: err instanceof Error ? err.message : String(err),
+            parseError: parseError ?? "stdout was not a plugin output message",
           },
           durationMs: result.durationMs,
         };
       }
 
-      if (parsed.success) {
-        return {
-          success: true,
-          data: parsed.data ?? {},
-          durationMs: result.durationMs,
-        };
-      }
-
       return {
-        success: false,
-        error: {
-          kind: "plugin-failed",
-          message: parsed.error?.message ?? "plugin reported failure without message",
-        },
+        success: true,
+        data: parsed.data ?? {},
         durationMs: result.durationMs,
       };
     },

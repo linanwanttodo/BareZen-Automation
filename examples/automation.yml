@@ -14,18 +14,20 @@ plugins:
   - rss
 
 flows:
+  # GitHub-hosted feeds, so this example does not depend on a third-party site
+  # answering from a runner (hnrss.org timed out from one while working locally).
   news-scan:
     - plugin: rss
       inputs:
-        url: https://hnrss.org/frontpage
+        url: https://github.com/cli/cli/releases.atom
         limit: 10
-      output: frontpage
+      output: cliReleases
 
     - plugin: rss
       inputs:
-        url: https://hnrss.org/best
+        url: https://github.com/tmux/tmux/commits.atom
         limit: 10
-      output: best
+      output: tmuxCommits
 
 settings:
   defaultTimeout: 60000

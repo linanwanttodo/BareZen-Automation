@@ -58,6 +58,23 @@ describe("RuntimeManager", () => {
     }
   });
 
+  it("surfaces the plugin message when it fails and exits non-zero", async () => {
+    const entry = join(tmpDir, "fail-exit.js");
+    writeFileSync(
+      entry,
+      "process.stdout.write(JSON.stringify({success:false,error:{message:'Entity expansion limit exceeded'}}));process.exit(1)",
+    );
+    const mgr = createRuntimeManager();
+    const result = await mgr.execute(makeNodeDescriptor(tmpDir, "fail-exit.js"), {});
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.kind).toBe("plugin-failed");
+      if (result.error.kind === "plugin-failed") {
+        expect(result.error.message).toBe("Entity expansion limit exceeded");
+      }
+    }
+  });
+
   it("returns non-zero-exit error when plugin exits non-zero", async () => {
     const entry = join(tmpDir, "exit.js");
     writeFileSync(entry, "process.stderr.write('boom');process.exit(2)");
