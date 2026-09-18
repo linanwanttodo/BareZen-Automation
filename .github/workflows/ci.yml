@@ -62,5 +62,5 @@ jobs:
         uses: ./
         with:
           config: examples/smoke.yml
-          flow: smoke
+          flow: gating
           log-level: info
