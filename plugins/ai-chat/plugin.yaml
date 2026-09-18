@@ -1,0 +1,10 @@
+name: ai-chat
+runtime: node
+entry: dist/index.js
+description: Chat with AI model
+inputs:
+  messages: { required: true, type: array }
+  model: { required: false, type: string, default: gpt-4o-mini }
+  systemPrompt: { required: false, type: string }
+outputs:
+  result: { type: object }

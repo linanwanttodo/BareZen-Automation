@@ -1,0 +1,9 @@
+name: atom
+runtime: node
+entry: dist/index.js
+description: Fetch and parse Atom feeds
+inputs:
+  url: { required: true, type: string }
+  limit: { required: false, type: number, default: 20 }
+outputs:
+  result: { type: object }

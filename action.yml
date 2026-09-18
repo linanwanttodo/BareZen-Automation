@@ -1,0 +1,67 @@
+name: BareZen Automation
+description: Plugin-Driven Automation Runtime — run YAML-defined plugin flows on GitHub Actions
+author: barezen
+branding:
+  icon: zap
+  color: blue
+
+inputs:
+  config:
+    description: Path to the automation YAML config file
+    required: true
+    default: automation.yml
+  flow:
+    description: Execute only the specified flow (omit to run all flows)
+    required: false
+    default: ""
+  plugins:
+    description: >-
+      Extra plugin directories to scan, comma-separated. Scanned after the
+      plugins bundled with this action, so a local plugin overrides a built-in
+      plugin of the same name.
+    required: false
+    default: plugins
+  log-level:
+    description: Log level (debug | info | warn | error)
+    required: false
+    default: info
+  python-version:
+    description: Python version to set up (empty string skips Python setup)
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "24"
+
+    - name: Setup Python
+      if: ${{ inputs.python-version != '' }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    # The runtime and every built-in plugin are committed as self-contained
+    # bundles, so there is nothing to install at run time.
+    - name: Run Automation
+      shell: bash
+      env:
+        BZ_CONFIG: ${{ inputs.config }}
+        BZ_FLOW: ${{ inputs.flow }}
+        BZ_PLUGINS: ${{ inputs.plugins }}
+        BZ_LOG_LEVEL: ${{ inputs.log-level }}
+        BZ_ACTION_PATH: ${{ github.action_path }}
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        roots="$BZ_ACTION_PATH/plugins"
+        if [ -n "$BZ_PLUGINS" ]; then
+          roots="$roots,$BZ_PLUGINS"
+        fi
+        args=(run --config "$BZ_CONFIG" --plugins "$roots" --log-level "$BZ_LOG_LEVEL")
+        if [ -n "$BZ_FLOW" ]; then
+          args+=(--flow "$BZ_FLOW")
+        fi
+        node "$BZ_ACTION_PATH/dist/index.js" "${args[@]}"

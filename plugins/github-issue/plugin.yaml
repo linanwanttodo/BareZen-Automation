@@ -1,0 +1,12 @@
+name: github-issue
+runtime: node
+entry: dist/index.js
+description: Create/update/close a GitHub Issue
+inputs:
+  repo: { required: true, type: string }
+  title: { required: true, type: string }
+  body: { required: false, type: string }
+  labels: { required: false, type: array }
+  action: { required: false, type: string, default: create }
+outputs:
+  result: { type: object }

@@ -1,0 +1,9 @@
+name: telegram
+runtime: node
+entry: dist/index.js
+description: Send message via Telegram Bot API
+inputs:
+  message: { required: true, type: string }
+  chatId: { required: true, type: string }
+outputs:
+  sent: { type: boolean }

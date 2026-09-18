@@ -1,0 +1,19 @@
+# Offline smoke config: exercises plugin loading, step sequencing and context
+# passing without touching the network or any secret. Used by CI.
+
+plugins:
+  - condition
+  - schedule
+
+flows:
+  smoke:
+    - plugin: condition
+      inputs:
+        expression: "true"
+        value: ok
+      output: gate
+
+    - plugin: schedule
+      inputs:
+        cron: "0 9 * * *"
+      output: tick

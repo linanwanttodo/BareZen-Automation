@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output is intentionally tracked: the action runs its committed bundles.
+# Only TypeScript incremental metadata and coverage are excluded.
+*.tsbuildinfo
+coverage/
+
+# Per-package tsc output: a local build artifact, not what the action runs.
+packages/*/dist/
+
+# Ship only each plugin's bundle, not stray tsc output next to it.
+plugins/*/dist/*
+!plugins/*/dist/index.js
+
+# Editor / local tooling
+.vscode/
+.idea/
+.kilo/
+.codeartsdoer/
+
+# OS / logs
+.DS_Store
+*.log

@@ -1,0 +1,11 @@
+name: github-release
+runtime: node
+entry: dist/index.js
+description: Create/update/delete a GitHub Release
+inputs:
+  repo: { required: true, type: string }
+  tag: { required: true, type: string }
+  body: { required: false, type: string }
+  action: { required: false, type: string, default: create }
+outputs:
+  result: { type: object }

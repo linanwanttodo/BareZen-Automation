@@ -1,0 +1,11 @@
+name: ai-translate
+runtime: node
+entry: dist/index.js
+description: Translate text using AI
+inputs:
+  text: { required: true, type: string }
+  from: { required: false, type: string }
+  to: { required: true, type: string }
+  model: { required: false, type: string, default: gpt-4o-mini }
+outputs:
+  result: { type: object }

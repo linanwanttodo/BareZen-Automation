@@ -1,0 +1,9 @@
+name: ai-summary
+runtime: node
+entry: dist/index.js
+description: Summarize text using AI
+inputs:
+  text: { required: true, type: string }
+  model: { required: false, type: string, default: gpt-4o-mini }
+outputs:
+  result: { type: object }

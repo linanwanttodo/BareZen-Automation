@@ -1,0 +1,9 @@
+name: slack
+runtime: node
+entry: dist/index.js
+description: Send message via Slack Webhook
+inputs:
+  message: { required: true, type: string }
+
+outputs:
+  sent: { type: boolean }

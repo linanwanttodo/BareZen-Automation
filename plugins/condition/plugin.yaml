@@ -1,0 +1,9 @@
+name: condition
+runtime: node
+entry: dist/index.js
+description: Evaluate conditional expressions
+inputs:
+  expression: { required: true, type: string }
+  value: { required: false }
+outputs:
+  result: { type: object }

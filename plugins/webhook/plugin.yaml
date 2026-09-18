@@ -1,0 +1,9 @@
+name: webhook
+runtime: node
+entry: dist/index.js
+description: Parse and validate webhook payloads
+inputs:
+  payload: { required: true, type: string }
+  secret: { required: false, type: string }
+outputs:
+  result: { type: object }

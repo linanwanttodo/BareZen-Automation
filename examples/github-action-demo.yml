@@ -1,0 +1,42 @@
+# Example: using BareZen Automation from your own repository.
+# Place this in .github/workflows/automation.yml — the only file you need
+# besides your automation.yml, since the action ships its runtime and plugins.
+
+name: Automation
+
+on:
+  # Scheduled
+  schedule:
+    - cron: "0 */6 * * *"
+
+  # Manual
+  workflow_dispatch:
+    inputs:
+      flow:
+        description: "Flow to execute (empty = all)"
+        required: false
+        default: ""
+
+  # Event-driven — the action receives this event as `github` in plugin context
+  issues:
+    types: [labeled]
+  push:
+    branches: [main]
+
+jobs:
+  automation:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: linanwanttodo/BareZen-Automation@v1
+        with:
+          config: automation.yml
+          flow: ${{ github.event.inputs.flow }}
+          log-level: info
+        env:
+          # Referenced from automation.yml as ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}

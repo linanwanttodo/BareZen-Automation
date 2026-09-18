@@ -1,0 +1,22 @@
+{
+  "name": "@barezen/plugin-rss",
+  "version": "0.1.0",
+  "description": "BareZen RSS feed plugin",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@barezen/sdk": "workspace:*",
+    "fast-xml-parser": "^4.4.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.4"
+  }
+}

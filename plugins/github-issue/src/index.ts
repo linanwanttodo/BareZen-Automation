@@ -1,0 +1,21 @@
+import { definePlugin } from "@barezen/sdk";
+import { z } from "zod";
+
+export default definePlugin({
+  name: "github-issue",
+  inputs: z.object({
+    repo: z.string(),
+    title: z.string(),
+    body: z.string().optional(),
+    labels: z.array(z.string()).optional(),
+    action: z.enum(["create", "update", "close"]).default("create")
+  }),
+  async run(ctx) {
+    const token = ctx.secrets.require("GITHUB_TOKEN");
+    const headers: Record<string, string> = { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" };
+    const url = `https://api.github.com/repos/${ctx.inputs.repo}/issues`;
+    const res = await fetch(url, { method: "POST", headers, body: JSON.stringify({ title: ctx.inputs.title, body: ctx.inputs.body, labels: ctx.inputs.labels }) });
+    const data = await res.json() as { number: number; html_url: string };
+    return { result: { number: data.number, url: data.html_url } };
+  },
+});

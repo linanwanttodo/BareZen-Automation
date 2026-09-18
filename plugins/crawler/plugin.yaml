@@ -1,0 +1,9 @@
+name: crawler
+runtime: node
+entry: dist/index.js
+description: Crawl web pages and extract data via CSS selectors
+inputs:
+  url: { required: true, type: string }
+  selectors: { required: true, type: object }
+outputs:
+  result: { type: object }

@@ -1,0 +1,12 @@
+name: github-label
+runtime: node
+entry: dist/index.js
+description: Manage GitHub labels
+inputs:
+  repo: { required: true, type: string }
+  name: { required: true, type: string }
+  color: { required: false, type: string }
+  description: { required: false, type: string }
+  action: { required: false, type: string, default: create }
+outputs:
+  result: { type: object }

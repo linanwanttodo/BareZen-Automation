@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:tsc
+      - run: pnpm typecheck
+      - run: pnpm test
+
+      # The bundles in git must match the sources they were built from.
+      - name: Verify committed bundles are up to date
+        run: |
+          pnpm build:bundle
+          git diff --exit-code -- dist plugins || {
+            echo "::error::Committed bundles are stale. Run 'pnpm build:bundle' and commit."
+            exit 1
+          }
+
+  # The whole premise of this action is that a runner installs nothing.
+  # This job has no dependency installation step at all.
+  runs-without-install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Execute the committed runtime
+        run: node dist/index.js run --config examples/smoke.yml --plugins plugins
+
+  action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run this repository's action locally
+        uses: ./
+        with:
+          config: examples/smoke.yml
+          log-level: debug
+
+      - name: Run a single flow
+        uses: ./
+        with:
+          config: examples/smoke.yml
+          flow: smoke
+          log-level: info

@@ -1,0 +1,10 @@
+name: ai-review
+runtime: node
+entry: dist/index.js
+description: Review code/text using AI
+inputs:
+  content: { required: true, type: string }
+  type: { required: false, type: string, default: code }
+  model: { required: false, type: string, default: gpt-4o-mini }
+outputs:
+  result: { type: object }

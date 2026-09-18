@@ -1,0 +1,18 @@
+name: rss
+runtime: node
+entry: dist/index.js
+description: Fetch and parse RSS feeds
+inputs:
+  url:
+    required: true
+    type: string
+    description: RSS feed URL
+  limit:
+    required: false
+    type: number
+    default: 20
+    description: Maximum number of articles to return
+outputs:
+  articles:
+    type: array
+    description: List of parsed RSS articles

@@ -1,0 +1,35 @@
+{
+  "name": "barezen-automation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plugin-Driven Automation Runtime for GitHub Actions",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "build": "pnpm build:tsc && pnpm build:bundle",
+    "build:tsc": "pnpm -r run build",
+    "build:bundle": "node scripts/bundle.mjs",
+    "dev": "pnpm -r --parallel run dev",
+    "clean": "pnpm -r exec rimraf dist node_modules && rimraf node_modules",
+    "typecheck": "pnpm -r run typecheck",
+    "format": "biome format --write .",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "check": "biome check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0",
+    "@vitest/coverage-v8": "^2.0.5",
+    "esbuild": "^0.28.2",
+    "rimraf": "^5.0.7",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5",
+    "yaml": "^2.5.1"
+  }
+}

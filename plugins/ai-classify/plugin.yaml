@@ -1,0 +1,10 @@
+name: ai-classify
+runtime: node
+entry: dist/index.js
+description: Classify text into categories using AI
+inputs:
+  text: { required: true, type: string }
+  categories: { required: true, type: array }
+  model: { required: false, type: string, default: gpt-4o-mini }
+outputs:
+  result: { type: object }

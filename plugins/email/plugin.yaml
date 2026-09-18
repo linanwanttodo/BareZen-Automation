@@ -1,0 +1,12 @@
+name: email
+runtime: node
+entry: dist/index.js
+description: Send email via SMTP
+inputs:
+  to: { required: true, type: string }
+  subject: { required: true, type: string }
+  body: { required: true, type: string }
+  smtpHost: { required: false, type: string }
+  smtpPort: { required: false, type: number, default: 587 }
+outputs:
+  sent: { type: boolean }

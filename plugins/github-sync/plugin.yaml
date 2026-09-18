@@ -1,0 +1,10 @@
+name: github-sync
+runtime: node
+entry: dist/index.js
+description: Sync branches/tags between repositories
+inputs:
+  sourceRepo: { required: true, type: string }
+  targetRepo: { required: true, type: string }
+  branches: { required: false, type: array }
+outputs:
+  result: { type: object }

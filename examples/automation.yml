@@ -1,0 +1,32 @@
+# Example automation config — runs with no secrets and no setup beyond this
+# repository's action. See examples/with-secrets.yml for notification plugins.
+#
+# Data passing today: `input: { <param>: <outputName> }` binds an earlier step's
+# whole output object to <param>, and `input: <outputName>` binds it to a
+# parameter literally named `input`. Field paths and templating
+# (e.g. `news.articles[0].title`) are not implemented, so a step producing
+# `{ articles: [...] }` cannot feed a step that needs a `string`.
+#
+# Flows below therefore chain steps sequentially rather than piping one step's
+# field into another.
+
+plugins:
+  - rss
+
+flows:
+  news-scan:
+    - plugin: rss
+      inputs:
+        url: https://hnrss.org/frontpage
+        limit: 10
+      output: frontpage
+
+    - plugin: rss
+      inputs:
+        url: https://hnrss.org/best
+        limit: 10
+      output: best
+
+settings:
+  defaultTimeout: 60000
+  logLevel: info
