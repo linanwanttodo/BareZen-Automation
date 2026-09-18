@@ -147,6 +147,68 @@ describe("FlowEngine", () => {
     expect(result.steps).toHaveLength(1);
   });
 
+  it("gates a step on an earlier step's output path", async () => {
+    const reg = createPluginRegistry();
+    reg.register(makeDescriptor("a"));
+    let secondRan = false;
+    const mgr: RuntimeManager = {
+      async execute(_descriptor, inputs) {
+        if ((inputs as Record<string, unknown>).marker === "second") secondRan = true;
+        return { success: true, data: { count: 7 }, durationMs: 1 };
+      },
+    };
+    const engine = createFlowEngine(mgr);
+
+    const satisfied = await engine.execute(
+      "flow",
+      [
+        { plugin: "a", output: "news" },
+        { plugin: "a", if: "news.count > 5", inputs: { marker: "second" } },
+      ],
+      reg,
+      makeGitHubContext(),
+    );
+    expect(satisfied.success).toBe(true);
+    expect(satisfied.steps).toHaveLength(2);
+    expect(secondRan).toBe(true);
+
+    secondRan = false;
+    const unsatisfied = await engine.execute(
+      "flow",
+      [
+        { plugin: "a", output: "news" },
+        { plugin: "a", if: "news.count > 10", inputs: { marker: "second" } },
+      ],
+      reg,
+      makeGitHubContext(),
+    );
+    expect(unsatisfied.success).toBe(true);
+    expect(unsatisfied.steps).toHaveLength(1);
+    expect(secondRan).toBe(false);
+  });
+
+  it("fails the flow when an if expression cannot be parsed", async () => {
+    const reg = createPluginRegistry();
+    reg.register(makeDescriptor("a"));
+    let executed = false;
+    const mgr: RuntimeManager = {
+      async execute() {
+        executed = true;
+        return { success: true, data: {}, durationMs: 1 };
+      },
+    };
+    const engine = createFlowEngine(mgr);
+    const result = await engine.execute(
+      "flow",
+      [{ plugin: "a", if: "github.eventName ==" }],
+      reg,
+      makeGitHubContext(),
+    );
+    expect(result.success).toBe(false);
+    expect(executed).toBe(false);
+    expect(result.error?.message).toContain("Invalid 'if' expression");
+  });
+
   it("retries on failure according to retry config", async () => {
     const reg = createPluginRegistry();
     reg.register(makeDescriptor("a"));

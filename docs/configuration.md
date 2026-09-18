@@ -126,23 +126,53 @@ Secrets are resolved recursively in strings, arrays, and objects. Resolved value
 
 ## Condition Expressions
 
-The `if` field supports simple expressions:
+`if` is evaluated by a small parser, not by JavaScript. Supported:
+
+| Form | Example |
+|------|---------|
+| literals | `true`, `false`, `42`, `"push"` |
+| comparison | `==`, `!=`, `>`, `>=`, `<`, `<=` |
+| logic | `&&`, `\|\|`, `!`, parentheses |
+| reference | `github.ref`, `news.count`, `news.articles[0].title` |
+
+A reference resolves against the `github` context plus every output stored by an
+earlier step in the same flow:
 
 ```yaml
 - plugin: deploy
-  if: true              # Always execute
-  inputs: { ... }
+  if: github.eventName == "push" && github.ref == "refs/heads/main"
 
-- plugin: skip-test
-  if: false             # Never execute
-  inputs: { ... }
+- plugin: notify
+  if: news.count > 5              # from an earlier step's `output: news`
+
+- plugin: summarise
+  if: digest.text                  # truthy: non-empty string, non-zero number
+
+- plugin: audit
+  if: !github.official             # anything absent reads as false
 ```
+
+`==` and `!=` treat a numeric string and a number as equal, because YAML may
+type the same value either way (`"7" == 7` is true). Ordering comparisons
+require both sides to be numeric or the step fails.
+
+Two distinct outcomes, deliberately:
+
+- **false expression** → the step is skipped and the flow continues.
+- **unparseable expression** → the step fails with `Invalid 'if' expression: ...`
+  and the flow aborts (unless `continueOnError`), because a typo that silently
+  skips work is worse than one that stops the run.
+
+Property access is limited to an object's own fields: `__proto__`,
+`constructor` and similar are rejected, and no function call, assignment or
+member of the JavaScript runtime is reachable from an expression.
 
 ## Complete Example
 
 ```yaml
 plugins:
   - rss
+  - text-template
   - ai-summary
   - email
   - telegram
@@ -155,26 +185,32 @@ flows:
         limit: 20
       output: articles
 
+    - plugin: text-template
+      input: { vars: articles }
+      inputs:
+        template: |
+          {{#each articles}}- {{title}}
+          {{/each}}
+      output: digest
+
     - plugin: ai-summary
-      input: articles
+      input: { text: digest.text }
       inputs:
         model: gpt-4o-mini
-        maxLength: 500
       output: summary
 
     - plugin: email
-      input: summary
+      input: { body: summary.text }
       inputs:
         to: team@example.com
         subject: Daily Digest
-        body: ${{ steps.summary.text }}
       continueOnError: true
 
     - plugin: telegram
       inputs:
         chatId: ${{ secrets.TELEGRAM_CHAT_ID }}
         message: "Daily digest sent"
-      if: true
+      if: summary.text
 
   weekly-report:
     - plugin: rss

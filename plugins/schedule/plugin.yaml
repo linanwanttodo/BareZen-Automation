@@ -1,9 +1,0 @@
-name: schedule
-runtime: node
-entry: dist/index.js
-description: Check if current time matches cron schedule
-inputs:
-  cron: { required: true, type: string }
-  timezone: { required: false, type: string }
-outputs:
-  result: { type: object }

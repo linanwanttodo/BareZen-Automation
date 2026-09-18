@@ -12,6 +12,7 @@ import { silentLogger } from "../logger/logger.js";
 import type { PluginRegistry } from "../plugin/registry.js";
 import type { RuntimeManager } from "../runtime/manager.js";
 import { createFlowContext, type FlowContext } from "./context.js";
+import { evaluateExpression } from "./expression.js";
 import { createStepExecutor, type StepResult } from "./step.js";
 
 /** Result of a flow execution. */
@@ -53,21 +54,40 @@ export function createFlowEngine(
         const step = steps[i]!;
         const stepLabel = `[${i}] ${step.plugin}`;
 
-        if (step.if !== undefined && !evaluateCondition(step.if, githubContext)) {
+        const gate =
+          step.if !== undefined
+            ? evaluateExpression(step.if, buildScope(githubContext, context))
+            : undefined;
+
+        if (gate !== undefined && gate.success && !gate.value) {
           logger.info(`Skipping step ${stepLabel} (condition false)`);
           continue;
         }
 
         logger.info(`Executing step ${stepLabel}`);
 
-        const result = await executeWithRetry(
-          stepExecutor,
-          step,
-          i,
-          context,
-          registry,
-          logger,
-        );
+        const result =
+          gate !== undefined && !gate.success
+            ? {
+                index: i,
+                plugin: step.plugin,
+                result: {
+                  success: false as const,
+                  error: {
+                    kind: "plugin-failed" as const,
+                    message: `Invalid 'if' expression: ${gate.error}`,
+                  },
+                  durationMs: 0,
+                },
+              }
+            : await executeWithRetry(
+                stepExecutor,
+                step,
+                i,
+                context,
+                registry,
+                logger,
+              );
         results.push(result);
 
         if (!result.result.success) {
@@ -139,17 +159,13 @@ async function executeWithRetry(
   return lastResult!;
 }
 
-/** Evaluate a simple condition expression against the GitHub context. */
-function evaluateCondition(expr: string, github: GitHubContext): boolean {
-  const replaced = expr.replace(/github\.(\w+)/g, (_, key: string) => {
-    const value = (github as unknown as Record<string, unknown>)[key];
-    return typeof value === "string" ? `"${value}"` : String(value);
-  });
-  try {
-    return Boolean(eval(replaced));
-  } catch {
-    return false;
+/** Names an `if` expression may reference: the GitHub context plus step outputs. */
+function buildScope(github: GitHubContext, context: FlowContext): Record<string, unknown> {
+  const scope: Record<string, unknown> = { github };
+  for (const key of context.keys()) {
+    scope[key] = context.getInput(key);
   }
+  return scope;
 }
 
 function sleep(ms: number): Promise<void> {

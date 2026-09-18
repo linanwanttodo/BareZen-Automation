@@ -9,7 +9,7 @@ GitHub Actions is powerful, but writing complex automation logic in workflow YAM
 - **YAML-driven flows** — define multi-step automation pipelines in a single `automation.yml`
 - **Multi-language plugins** — write plugins in TypeScript, Python, Shell, Node, or Docker
 - **Secret resolution** — `${{ secrets.XXX }}` references resolved automatically with log masking
-- **25 built-in plugins** — RSS, email, Telegram, Discord, Slack, WeCom, Feishu, GitHub ops, AI, and more
+- **23 built-in plugins** — RSS, email, Telegram, Discord, Slack, WeCom, Feishu, GitHub ops, AI, and more
 - **TypeScript SDK** — `definePlugin()` with Zod input validation and automatic JSON I/O
 - **Composite Action** — drop-in `uses: linanwanttodo/BareZen-Automation@v1` for any repository
 
@@ -101,7 +101,7 @@ barezen-automation/
 │   ├── core/                     # Runtime engine, config, plugin loader
 │   ├── sdk/                      # TypeScript plugin SDK
 │   └── cli/                      # Command-line interface
-├── plugins/                      # 25 built-in plugins
+├── plugins/                      # 23 built-in plugins
 │   └── rss/
 │       ├── plugin.yaml           # Manifest: runtime, entry, inputs, outputs
 │       ├── src/index.ts          # Source
@@ -124,7 +124,7 @@ barezen-automation/
 | Notification | `email`, `telegram`, `discord`, `slack`, `wecom`, `feishu` |
 | GitHub | `github-sync`, `github-star`, `github-release`, `github-issue`, `github-pr`, `github-label` |
 | AI | `ai-summary`, `ai-translate`, `ai-review`, `ai-classify`, `ai-chat` |
-| Utility | `condition`, `retry`, `schedule`, `text-template` |
+| Utility | `retry`, `text-template` |
 
 ## Development
 

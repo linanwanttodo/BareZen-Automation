@@ -1,24 +1,12 @@
-# Offline smoke config: exercises plugin loading, step sequencing and context
-# passing without touching the network or any secret. Used by CI.
+# Offline smoke config: exercises plugin loading, step sequencing, context
+# passing and the `if:` gate without touching the network or any secret.
+# Used by CI.
 
 plugins:
-  - condition
-  - schedule
   - text-template
 
 flows:
-  smoke:
-    - plugin: condition
-      inputs:
-        expression: "true"
-        value: ok
-      output: gate
-
-    - plugin: schedule
-      inputs:
-        cron: "0 9 * * *"
-      output: tick
-
+  shaping:
     - plugin: text-template
       inputs:
         template: "digest of {{count}} items"
@@ -32,3 +20,35 @@ flows:
       inputs:
         template: "forwarded: {{text}}"
       output: forwarded
+
+  gating:
+    - plugin: text-template
+      inputs:
+        template: "{{n}}"
+        vars:
+          n: 7
+      output: number
+
+    # Path against an earlier step's output; "7" compares numerically.
+    - plugin: text-template
+      if: number.text > 5
+      inputs:
+        template: "executed"
+      output: ran
+
+    # Same reference, unsatisfied: this step must be skipped, not failed.
+    - plugin: text-template
+      if: number.text > 900
+      inputs:
+        template: "never"
+      output: skipped
+
+    - plugin: text-template
+      if: github.eventName != ""
+      inputs:
+        template: "always"
+      output: githubGate
+
+settings:
+  defaultTimeout: 60000
+  logLevel: info
