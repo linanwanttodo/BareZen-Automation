@@ -1,0 +1,27 @@
+plugins:
+  - hackernews
+  - markdown-report
+  - ai-github-models
+  - report
+
+flows:
+  digest:
+    - plugin: hackernews
+      inputs: { tag: front_page, limit: 8 }
+      output: stories
+
+    - plugin: markdown-report
+      input: { articles: stories.articles }
+      inputs: { heading: "HN front page", limit: 8 }
+      output: report_md
+
+    - plugin: ai-github-models
+      input: { prompt: report_md.text }
+      inputs:
+        system: "Summarise the digest in two sentences."
+        model: "openai/gpt-4o-mini"
+      output: summary
+
+    - plugin: report
+      input: { text: summary.text }
+      output: size
