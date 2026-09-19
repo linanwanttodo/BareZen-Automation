@@ -240,8 +240,11 @@ Add these in your repository settings (Settings → Secrets and variables → Ac
 | `OPENAI_API_KEY` | the OpenAI-compatible ai-* plugins only | Secret |
 | `BAREZEN_HTTP_TIMEOUT` | per-request outbound ceiling in ms (default 30000) | Variable |
 
-`ai-github-models` reaches an LLM with the workflow's own `GITHUB_TOKEN`, so a
-digest pipeline can include an AI step without storing any third-party key.
+`ai-github-models` authenticates with the workflow's own `GITHUB_TOKEN` and
+stores no third-party key — but **verified 2026-09-19 it returns HTTP 410**
+("scheduled retirement brownout") while GitHub shuts Models down, so no flow
+should depend on it yet. The OpenAI-compatible `ai-*` plugins with
+`OPENAI_API_KEY` are the working path today.
 
 ## Accessing GitHub Context in Plugins
 

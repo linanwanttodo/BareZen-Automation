@@ -9,7 +9,7 @@ GitHub Actions is powerful, but writing complex automation logic in workflow YAM
 - **YAML-driven flows** — define multi-step automation pipelines in a single `automation.yml`
 - **Multi-language plugins** — write plugins in TypeScript, Python, Shell, Node, or Docker
 - **Secret resolution** — `${{ secrets.XXX }}` references resolved automatically with log masking
-- **26 built-in plugins** — feeds and Hacker News, email, Telegram, Discord, Slack, WeCom, Feishu, GitHub ops, AI (including GitHub Models via GITHUB_TOKEN), and more
+- **26 built-in plugins** — feeds and Hacker News, email, Telegram, Discord, Slack, WeCom, Feishu, GitHub ops, AI, and more
 - **TypeScript SDK** — `definePlugin()` with Zod input validation and automatic JSON I/O
 - **Composite Action** — drop-in `uses: linanwanttodo/BareZen-Automation@v1` for any repository
 
@@ -123,7 +123,7 @@ barezen-automation/
 | Content | `rss`, `atom`, `hackernews`, `crawler` |
 | Notification | `email`, `telegram`, `discord`, `slack`, `wecom`, `feishu`, `webhook` |
 | GitHub | `github-sync`, `github-star`, `github-release`, `github-issue`, `github-pr`, `github-label` |
-| AI | `ai-github-models`, `ai-summary`, `ai-translate`, `ai-review`, `ai-classify`, `ai-chat` |
+| AI | `ai-summary`, `ai-translate`, `ai-review`, `ai-classify`, `ai-chat` (need `OPENAI_API_KEY`) · `ai-github-models` (needs no key, but returns HTTP 410 while GitHub retires Models) |
 | Utility | `retry`, `text-template`, `markdown-report` |
 
 ## Development
