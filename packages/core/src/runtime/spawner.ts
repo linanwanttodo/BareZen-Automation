@@ -7,6 +7,12 @@
 
 import { spawn, type ChildProcess } from "node:child_process";
 
+/** Settle window after a group kill, for a tree that lingers on inherited pipes. */
+const KILL_GRACE_MS = 250;
+
+/** Whether SIGTERM can be sent to a whole process group. */
+const CAN_SIGNAL_PROCESS_GROUP = process.platform !== "win32";
+
 /** Options for spawning a process. */
 export interface SpawnOptions {
   /** Working directory. */
@@ -64,18 +70,22 @@ export function spawnProcess(
       cwd: options.cwd,
       env: options.env ?? process.env,
       stdio: ["pipe", "pipe", "pipe"],
+      // Own process group, so a timeout can kill the whole tree.
+      detached: CAN_SIGNAL_PROCESS_GROUP,
     });
 
     let stdout = "";
     let stderr = "";
     let timedOut = false;
     let timer: NodeJS.Timeout | undefined;
+    let graceTimer: NodeJS.Timeout | undefined;
     let settled = false;
 
     const finish = (result: SpawnResult) => {
       if (settled) return;
       settled = true;
       if (timer !== undefined) clearTimeout(timer);
+      if (graceTimer !== undefined) clearTimeout(graceTimer);
       resolve(result);
     };
 
@@ -95,7 +105,26 @@ export function spawnProcess(
     if (options.timeoutMs !== undefined && options.timeoutMs > 0) {
       timer = setTimeout(() => {
         timedOut = true;
-        child.kill(options.killSignal ?? "SIGTERM");
+        const signal = options.killSignal ?? "SIGTERM";
+        try {
+          if (CAN_SIGNAL_PROCESS_GROUP && child.pid !== undefined) {
+            process.kill(-child.pid, signal);
+          } else {
+            child.kill(signal);
+          }
+        } catch {
+          // Group already gone; the grace timer still settles.
+        }
+        graceTimer = setTimeout(() => {
+          finish({
+            exitCode: null,
+            signal: null,
+            stdout,
+            stderr,
+            timedOut,
+            durationMs: Date.now() - start,
+          });
+        }, KILL_GRACE_MS);
       }, options.timeoutMs);
     }
 

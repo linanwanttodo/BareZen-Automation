@@ -21,3 +21,9 @@ export {
   readInput,
   writeOutput,
 } from "./protocol.js";
+export {
+  DEFAULT_HTTP_TIMEOUT_MS,
+  fetchJson,
+  fetchWithTimeout,
+} from "./http.js";
+export { splitText } from "./text.js";

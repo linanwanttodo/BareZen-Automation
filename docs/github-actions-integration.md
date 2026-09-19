@@ -199,7 +199,13 @@ jobs:
 
 ## Secrets
 
-Secrets are automatically available via `${{ secrets.XXX }}` in `automation.yml`. The `GITHUB_TOKEN` is injected automatically.
+`${{ secrets.XXX }}` inside `automation.yml` is resolved by BareZen from the
+process environment — GitHub's expression engine only runs in workflow files, so
+nothing here is interpolated by Actions. The consequence: every name a config
+references must be passed into the step via `env:` (see
+`examples/github-action-demo.yml`), for **all** flows in the file, because
+resolution happens before the first step runs. `GITHUB_TOKEN` is injected
+automatically by the action.
 
 ```yaml
 # In your automation.yml
@@ -207,23 +213,35 @@ flows:
   notify:
     - plugin: telegram
       inputs:
-        chatId: ${{ secrets.TELEGRAM_CHAT_ID }}
+        chatId: ${{ secrets.TELEGRAM_CHAT_ID }}   # or set TELEGRAM_CHAT_ID in env
         message: "Build complete"
-        botToken: ${{ secrets.TELEGRAM_BOT_TOKEN }}
 ```
+
+The Telegram token itself is not an input: the plugin reads `TELEGRAM_BOT_TOKEN`
+from the environment, so it never lands in a config file or a log.
 
 ### Required Secrets
 
-Add these in your repository settings (Settings → Secrets and variables → Actions):
+Add these in your repository settings (Settings → Secrets and variables → Actions). Each plugin reads its **own** variable name, so one flow can notify several channels at once.
 
-| Secret | Used by |
-| ------ | ------- |
-| `OPENAI_API_KEY` | AI plugins (ai-summary, ai-translate, etc.) |
-| `TELEGRAM_CHAT_ID` | Telegram plugin |
-| `TELEGRAM_BOT_TOKEN` | Telegram plugin |
-| `WEBHOOK_URL` | Discord, Slack, WeCom, Feishu plugins |
-| `SMTP_USER` / `SMTP_PASS` / `SMTP_HOST` | Email plugin |
-| `GITHUB_TOKEN` | GitHub plugins (auto-provided by `github.token`) |
+| Variable | Used by | Kind |
+| -------- | ------- | ---- |
+| `GITHUB_TOKEN` | GitHub plugins and `ai-github-models` (auto-provided by `github.token`) | Secret |
+| `TELEGRAM_BOT_TOKEN` | Telegram plugin | Secret |
+| `TELEGRAM_CHAT_ID` | Telegram plugin, unless `chatId` is passed inline | Variable |
+| `DISCORD_WEBHOOK_URL` | Discord plugin | Secret |
+| `SLACK_WEBHOOK_URL` | Slack plugin | Secret |
+| `WECOM_WEBHOOK_URL` | WeCom plugin | Secret |
+| `FEISHU_WEBHOOK_URL` | Feishu plugin | Secret |
+| `GENERIC_WEBHOOK_URL` | webhook plugin, unless `url` is passed inline | Secret |
+| `GENERIC_WEBHOOK_SECRET` | webhook plugin, sent as `Authorization: Bearer` | Secret |
+| `SMTP_USER` / `SMTP_PASS` | Email plugin | Secret |
+| `SMTP_HOST` | Email plugin, unless `smtpHost` is passed inline | Variable |
+| `OPENAI_API_KEY` | the OpenAI-compatible ai-* plugins only | Secret |
+| `BAREZEN_HTTP_TIMEOUT` | per-request outbound ceiling in ms (default 30000) | Variable |
+
+`ai-github-models` reaches an LLM with the workflow's own `GITHUB_TOKEN`, so a
+digest pipeline can include an AI step without storing any third-party key.
 
 ## Accessing GitHub Context in Plugins
 

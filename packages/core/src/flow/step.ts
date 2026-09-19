@@ -29,9 +29,16 @@ export interface StepExecutor {
   ): Promise<StepResult>;
 }
 
+/** Options for a step executor. */
+export interface StepExecutorOptions {
+  /** Applied to steps that do not declare their own `timeout`. */
+  defaultTimeoutMs?: number;
+}
+
 /** Create a step executor. */
 export function createStepExecutor(
   runtimeManager: RuntimeManager,
+  executorOptions: StepExecutorOptions = {},
 ): StepExecutor {
   return {
     async execute(step, index, context, registry) {
@@ -85,8 +92,9 @@ export function createStepExecutor(
         };
       }
 
+      const timeoutMs = step.timeout ?? executorOptions.defaultTimeoutMs;
       const options = {
-        ...(step.timeout !== undefined ? { timeoutMs: step.timeout } : {}),
+        ...(timeoutMs !== undefined ? { timeoutMs } : {}),
         github: context.getGitHub(),
       };
 

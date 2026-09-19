@@ -1,17 +1,15 @@
 # Example automation config — runs with no secrets and no setup beyond this
-# repository's action. See examples/with-secrets.yml for notification plugins.
+# repository's action. See examples/with-secrets.yml for notification plugins
+# and the AI-backed pipeline.
 #
-# Data passing today: `input: { <param>: <outputName> }` binds an earlier step's
-# whole output object to <param>, and `input: <outputName>` binds it to a
-# parameter literally named `input`. Field paths and templating
-# (e.g. `news.articles[0].title`) are not implemented, so a step producing
-# `{ articles: [...] }` cannot feed a step that needs a `string`.
-#
-# Flows below therefore chain steps sequentially rather than piping one step's
-# field into another.
+# A step reads an earlier step's output with `input:`, which accepts field paths
+# (`news.articles`, `news.articles[0].title`). Because every output is an
+# object, markdown-report or text-template turns a list into text.
 
 plugins:
   - rss
+  - hackernews
+  - markdown-report
 
 flows:
   # GitHub-hosted feeds, so this example does not depend on a third-party site
@@ -28,6 +26,21 @@ flows:
         url: https://github.com/tmux/tmux/commits.atom
         limit: 10
       output: tmuxCommits
+
+  # Fetch, then render a report with no AI step and no credentials.
+  digest:
+    - plugin: hackernews
+      inputs:
+        tag: front_page
+        limit: 8
+      output: stories
+
+    - plugin: markdown-report
+      input: { articles: stories.articles }
+      inputs:
+        heading: Hacker News front page
+        limit: 8
+      output: report
 
 settings:
   defaultTimeout: 60000

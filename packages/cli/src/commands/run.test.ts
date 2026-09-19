@@ -3,7 +3,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createPluginLoader, createPluginRegistry } from "@barezen/core";
 import { describe, expect, it } from "vitest";
-import { loadPluginsFromDirs, splitPluginDirs } from "./run.js";
+import {
+  loadPluginsFromDirs,
+  resolveLogLevel,
+  resolvePluginDirs,
+  splitPluginDirs,
+} from "./run.js";
 
 function writeEchoPlugin(root: string, name: string, value: string): string {
   const dir = join(root, name);
@@ -86,5 +91,33 @@ describe("loadPluginsFromDirs", () => {
     );
 
     expect(count).toBe(1);
+  });
+});
+
+describe("resolveLogLevel", () => {
+  it("prefers an explicit CLI level", () => {
+    expect(resolveLogLevel("debug", "warn")).toBe("debug");
+  });
+
+  it("treats an empty CLI level as unset", () => {
+    expect(resolveLogLevel("", "warn")).toBe("warn");
+  });
+
+  it("falls back to info", () => {
+    expect(resolveLogLevel(undefined, undefined)).toBe("info");
+  });
+});
+
+describe("resolvePluginDirs", () => {
+  it("appends the config's pluginDir as the highest precedence root", () => {
+    expect(resolvePluginDirs("a,b", "cfg")).toEqual(["a", "b", "cfg"]);
+  });
+
+  it("uses the default root when nothing is supplied", () => {
+    expect(resolvePluginDirs(undefined, undefined)).toEqual(["plugins"]);
+  });
+
+  it("ignores an empty pluginDir", () => {
+    expect(resolvePluginDirs("plugins", "")).toEqual(["plugins"]);
   });
 });

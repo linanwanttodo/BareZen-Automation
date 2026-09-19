@@ -1,0 +1,9 @@
+name: hackernews
+runtime: node
+entry: dist/index.js
+description: Fetch Hacker News stories, in the same article shape as the rss plugin
+inputs:
+  tag: { required: false, type: string, default: front_page, description: Algolia HN tag, e.g. front_page, show_hn, ask_hn }
+  limit: { required: false, type: number, default: 10 }
+outputs:
+  articles: { type: array, description: List of stories matching the rss plugin's shape }

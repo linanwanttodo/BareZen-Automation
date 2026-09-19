@@ -1,0 +1,11 @@
+name: markdown-report
+runtime: node
+entry: dist/index.js
+description: Render article lists as a Markdown report, the no-AI fallback
+inputs:
+  articles: { required: true, type: array, description: Articles in the rss or hackernews shape }
+  heading: { required: false, type: string }
+  limit: { required: false, type: number, default: 20 }
+outputs:
+  text: { type: string, description: Rendered Markdown }
+  count: { type: number, description: Number of articles rendered }

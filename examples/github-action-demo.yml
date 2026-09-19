@@ -7,15 +7,20 @@ name: Automation
 on:
   # Scheduled
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 9 * * *"
 
-  # Manual
+  # Manual, picking one flow
   workflow_dispatch:
     inputs:
       flow:
         description: "Flow to execute (empty = all)"
         required: false
         default: ""
+        type: choice
+        options:
+          - ""
+          - digest
+          - notify
 
   # Event-driven — the action receives this event as `github` in plugin context
   issues:
@@ -23,9 +28,16 @@ on:
   push:
     branches: [main]
 
+# A stale scheduled run that outlives its slot is worse than no run: cancel it
+# rather than queueing behind it.
+concurrency:
+  group: automation-${{ github.workflow }}-${{ github.event_name }}
+  cancel-in-progress: true
+
 jobs:
   automation:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
@@ -35,8 +47,31 @@ jobs:
         with:
           config: automation.yml
           flow: ${{ github.event.inputs.flow }}
-          log-level: info
+          # Empty defers to settings.logLevel in automation.yml.
+          log-level: ""
+
+        # Non-secret knobs (feed URLs, limits, model names) belong in repo
+        # Variables where they stay visible; Secrets are for anything that must
+        # never appear in a log.
         env:
-          # Referenced from automation.yml as ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          BAREZEN_HTTP_TIMEOUT: ${{ vars.BAREZEN_HTTP_TIMEOUT }}
+
+          # ai-github-models authenticates with this, so an AI step needs no
+          # third-party key at all.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # Only needed if a flow uses the OpenAI-compatible ai-* plugins.
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+          # Each notify plugin reads its own variable name, so one flow can fan
+          # out to several channels.
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          WECOM_WEBHOOK_URL: ${{ secrets.WECOM_WEBHOOK_URL }}
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+          GENERIC_WEBHOOK_URL: ${{ secrets.GENERIC_WEBHOOK_URL }}
+
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}

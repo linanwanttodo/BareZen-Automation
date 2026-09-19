@@ -104,9 +104,18 @@ Global settings applied to all flows.
 
 ```yaml
 settings:
-  defaultTimeout: 60000    # Default timeout in ms (default: 60000)
-  logLevel: info           # debug | info | warn | error (default: info)
+  defaultTimeout: 60000   # per-step ceiling in ms; applies to steps that do not
+                          # set their own `timeout`. Built-in default: 300000.
+  logLevel: debug         # debug | info | warn | error. Used unless the caller
+                          # passed --log-level / the action's log-level input.
+  pluginDir: plugins      # extra directory scanned last, so it overrides the
+                          # caller's plugin roots and any built-in of the same name
 ```
+
+A step's own `timeout` always beats `defaultTimeout`, and `defaultTimeout`
+beats the built-in ceiling. Steps are killed on timeout (the whole process tree,
+so a plugin that spawned helpers cannot linger) and the step reports
+`kind: "timeout"`.
 
 ## Secret References
 

@@ -13,7 +13,11 @@ import type { PluginRegistry } from "../plugin/registry.js";
 import type { RuntimeManager } from "../runtime/manager.js";
 import { createFlowContext, type FlowContext } from "./context.js";
 import { evaluateExpression } from "./expression.js";
-import { createStepExecutor, type StepResult } from "./step.js";
+import {
+  createStepExecutor,
+  type StepExecutorOptions,
+  type StepResult,
+} from "./step.js";
 
 /** Result of a flow execution. */
 export interface FlowResult {
@@ -38,8 +42,9 @@ export interface FlowEngine {
 export function createFlowEngine(
   runtimeManager: RuntimeManager,
   logger: Logger = silentLogger,
+  stepOptions: StepExecutorOptions = {},
 ): FlowEngine {
-  const stepExecutor = createStepExecutor(runtimeManager);
+  const stepExecutor = createStepExecutor(runtimeManager, stepOptions);
 
   return {
     async execute(flowName, steps, registry, githubContext) {

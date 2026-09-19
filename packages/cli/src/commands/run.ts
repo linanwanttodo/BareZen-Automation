@@ -33,6 +33,9 @@ export interface RunOptions {
 const DEFAULT_PLUGIN_DIR = "plugins";
 const DEFAULT_LOG_LEVEL = "info" as const;
 
+/** Per-step ceiling when a config sets no settings.defaultTimeout. */
+export const DEFAULT_STEP_TIMEOUT_MS = 300_000;
+
 /** Split a comma-separated `--plugins` value into directory roots. */
 export function splitPluginDirs(raw: string): string[] {
   return raw
@@ -65,6 +68,37 @@ export function loadPluginsFromDirs(
   return byName.size;
 }
 
+/** Log levels accepted by the CLI and `settings.logLevel`. */
+export type LogLevel = "debug" | "info" | "warn" | "error";
+
+/**
+ * Resolve the effective log level. An explicit `--log-level` wins; an empty
+ * value counts as unset because action inputs always pass something.
+ */
+export function resolveLogLevel(
+  cliLevel: string | undefined,
+  settingsLevel: string | undefined,
+): LogLevel {
+  const supplied = cliLevel !== undefined && cliLevel !== "" ? cliLevel : undefined;
+  const chosen = supplied ?? settingsLevel ?? DEFAULT_LOG_LEVEL;
+  return chosen as LogLevel;
+}
+
+/**
+ * Plugin roots to scan, lowest to highest precedence. A config's own
+ * `settings.pluginDir` outranks the caller's directories.
+ */
+export function resolvePluginDirs(
+  cliValue: string | undefined,
+  settingsPluginDir: string | undefined,
+): string[] {
+  const dirs = splitPluginDirs(cliValue ?? DEFAULT_PLUGIN_DIR);
+  if (settingsPluginDir !== undefined && settingsPluginDir !== "") {
+    dirs.push(settingsPluginDir);
+  }
+  return dirs;
+}
+
 /** Register the `run` subcommand on a commander Command. */
 export function registerRunCommand(program: Command): void {
   program
@@ -79,8 +113,7 @@ export function registerRunCommand(program: Command): void {
     )
     .option(
       "-l, --log-level <level>",
-      "Log level: debug | info | warn | error",
-      DEFAULT_LOG_LEVEL,
+      "Log level: debug | info | warn | error (default: settings.logLevel, else info)",
     )
     .action(async (opts: RunOptions) => {
       const exitCode = await runAutomation(opts);
@@ -90,8 +123,11 @@ export function registerRunCommand(program: Command): void {
 
 /** Execute the automation pipeline. Returns exit code (0 = success, 1 = failure). */
 export async function runAutomation(options: RunOptions): Promise<number> {
-  const logLevel = options.logLevel ?? DEFAULT_LOG_LEVEL;
-  const logger = createLogger({ level: logLevel, scope: "cli" });
+  const cliLevel = options.logLevel;
+  let logger = createLogger({
+    level: resolveLogLevel(cliLevel, undefined),
+    scope: "cli",
+  });
 
   try {
     // 1. GitHub context
@@ -102,6 +138,10 @@ export async function runAutomation(options: RunOptions): Promise<number> {
     // 2. Parse config
     const configParser = createConfigParser();
     const config: AutomationConfig = configParser.parse(options.config);
+    logger = createLogger({
+      level: resolveLogLevel(cliLevel, config.settings?.logLevel),
+      scope: "cli",
+    });
     logger.info(`Loaded config with ${config.plugins.length} plugins, ${Object.keys(config.flows).length} flows`);
 
     // 3. Resolve secrets in config
@@ -109,7 +149,7 @@ export async function runAutomation(options: RunOptions): Promise<number> {
     const resolvedConfig = secretResolver.resolve(config);
 
     // 4. Load plugins
-    const pluginDirs = splitPluginDirs(options.plugins ?? DEFAULT_PLUGIN_DIR);
+    const pluginDirs = resolvePluginDirs(options.plugins, config.settings?.pluginDir);
     const registry = createPluginRegistry();
     const loader = createPluginLoader(undefined, logger);
     const pluginCount = loadPluginsFromDirs(pluginDirs, registry, loader);
@@ -122,7 +162,10 @@ export async function runAutomation(options: RunOptions): Promise<number> {
 
     // 6. Execute flows
     const runtimeManager = createRuntimeManager();
-    const flowEngine = createFlowEngine(runtimeManager, logger);
+    const flowEngine = createFlowEngine(runtimeManager, logger, {
+      defaultTimeoutMs:
+        config.settings?.defaultTimeout ?? DEFAULT_STEP_TIMEOUT_MS,
+    });
 
     const flowNames =
       options.flow !== undefined

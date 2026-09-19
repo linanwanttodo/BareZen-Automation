@@ -1,9 +1,10 @@
 name: discord
 runtime: node
 entry: dist/index.js
-description: Send message via Discord Webhook
+description: Send a message to a Discord webhook, splitting long text into parts
 inputs:
   message: { required: true, type: string }
   username: { required: false, type: string }
 outputs:
   sent: { type: boolean }
+  parts: { type: number, description: Number of messages sent after splitting }

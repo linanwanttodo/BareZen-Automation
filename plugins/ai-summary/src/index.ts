@@ -1,4 +1,4 @@
-import { definePlugin } from "@barezen/sdk";
+import { definePlugin, fetchWithTimeout } from "@barezen/sdk";
 import { z } from "zod";
 
 export default definePlugin({
@@ -9,7 +9,7 @@ export default definePlugin({
   }),
   async run(ctx) {
     const apiKey = ctx.secrets.require("OPENAI_API_KEY");
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    const res = await fetchWithTimeout("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,

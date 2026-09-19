@@ -52,6 +52,43 @@ export interface RuntimeManager {
   ): Promise<PluginResult>;
 }
 
+/**
+ * Read a plugin's output message from stdout.
+ *
+ * The SDK writes its message as the last thing on stdout, but a bundled
+ * dependency may print above it, so whole-buffer parsing is tried first and
+ * line scanning backwards is the fallback.
+ */
+function parsePluginOutput(stdout: string): PluginOutputMessage | undefined {
+  const asMessage = (text: string): PluginOutputMessage | undefined => {
+    try {
+      const candidate: unknown = JSON.parse(text);
+      if (
+        typeof candidate === "object" &&
+        candidate !== null &&
+        "success" in candidate
+      ) {
+        return candidate as PluginOutputMessage;
+      }
+    } catch {
+      // Not JSON; keep looking.
+    }
+    return undefined;
+  };
+
+  const whole = asMessage(stdout);
+  if (whole !== undefined) return whole;
+
+  const lines = stdout.split("\n");
+  for (let i = lines.length - 1; i >= 0; i -= 1) {
+    const line = lines[i]!;
+    if (line.trim() === "") continue;
+    const candidate = asMessage(line);
+    if (candidate !== undefined) return candidate;
+  }
+  return undefined;
+}
+
 /** Create a runtime manager. */
 export function createRuntimeManager(): RuntimeManager {
   return {
@@ -118,13 +155,7 @@ export function createRuntimeManager(): RuntimeManager {
         };
       }
 
-      let parsed: PluginOutputMessage | undefined;
-      let parseError: string | undefined;
-      try {
-        parsed = JSON.parse(result.stdout) as PluginOutputMessage;
-      } catch (err) {
-        parseError = err instanceof Error ? err.message : String(err);
-      }
+      const parsed = parsePluginOutput(result.stdout);
 
       // A structured failure outranks the exit code: plugins report errors this
       // way and then exit non-zero, and dropping the message is undebuggable.
@@ -157,7 +188,7 @@ export function createRuntimeManager(): RuntimeManager {
           error: {
             kind: "invalid-output",
             raw: result.stdout,
-            parseError: parseError ?? "stdout was not a plugin output message",
+            parseError: "stdout contained no plugin output message",
           },
           durationMs: result.durationMs,
         };

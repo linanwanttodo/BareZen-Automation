@@ -1,9 +1,10 @@
 name: telegram
 runtime: node
 entry: dist/index.js
-description: Send message via Telegram Bot API
+description: Send a message via the Telegram Bot API, splitting long text into parts
 inputs:
   message: { required: true, type: string }
-  chatId: { required: true, type: string }
+  chatId: { required: false, type: string, description: Falls back to TELEGRAM_CHAT_ID }
 outputs:
   sent: { type: boolean }
+  parts: { type: number, description: Number of messages sent after splitting }

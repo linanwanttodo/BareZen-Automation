@@ -148,7 +148,7 @@ BareZen plugins communicate via JSON over stdin/stdout:
 {
   "inputs": { "url": "https://example.com", "limit": 10 },
   "github": { "eventName": "push", "repository": "owner/repo", "sha": "abc123" },
-  "secrets": ["API_KEY", "WEBHOOK_URL"]
+  "secrets": ["OPENAI_API_KEY", "SLACK_WEBHOOK_URL"]
 }
 ```
 

@@ -22,9 +22,11 @@ inputs:
     required: false
     default: plugins
   log-level:
-    description: Log level (debug | info | warn | error)
+    description: >-
+      Log level (debug | info | warn | error). Leave empty to use the config's
+      settings.logLevel, defaulting to info.
     required: false
-    default: info
+    default: ""
   python-version:
     description: Python version to set up (empty string skips Python setup)
     required: false

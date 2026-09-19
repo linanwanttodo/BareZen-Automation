@@ -1,4 +1,4 @@
-        import { definePlugin } from "@barezen/sdk";
+        import { definePlugin, fetchWithTimeout } from "@barezen/sdk";
         import { z } from "zod";
 
         export default definePlugin({
@@ -8,7 +8,7 @@
 selectors: z.record(z.string())
           }),
           async run(ctx) {
-            const res = await fetch(ctx.inputs.url);
+            const res = await fetchWithTimeout(ctx.inputs.url);
 const html = await res.text();
 return { result: { html, selectors: ctx.inputs.selectors } };
           },

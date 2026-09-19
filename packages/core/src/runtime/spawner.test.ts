@@ -63,6 +63,19 @@ describe("spawnProcess", () => {
     expect(result.signal).toBe("SIGTERM");
   });
 
+  it("bounds wall time when a grandchild inherits the pipes", async () => {
+    const start = Date.now();
+    const result = await spawnProcess(
+      "bash",
+      ["-c", "sleep 5 & wait"],
+      undefined,
+      { timeoutMs: 200 },
+    );
+    const elapsedMs = Date.now() - start;
+    expect(result.timedOut).toBe(true);
+    expect(elapsedMs).toBeLessThan(2000);
+  });
+
   it("respects cwd option", async () => {
     const result = await spawnProcess("node", ["-e", "process.stdout.write(process.cwd())"], undefined, {
       cwd: "/tmp",

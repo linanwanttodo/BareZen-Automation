@@ -1,9 +1,10 @@
 name: webhook
 runtime: node
 entry: dist/index.js
-description: Parse and validate webhook payloads
+description: POST a JSON payload to an arbitrary endpoint
 inputs:
-  payload: { required: true, type: string }
-  secret: { required: false, type: string }
+  payload: { required: true, type: string, description: "JSON text, or any string wrapped as {text}" }
+  url: { required: false, type: string, description: Falls back to GENERIC_WEBHOOK_URL }
 outputs:
-  result: { type: object }
+  sent: { type: boolean }
+  status: { type: number, description: Response status code }

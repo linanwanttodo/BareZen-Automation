@@ -110,6 +110,22 @@ importers:
         specifier: ^5.5.4
         version: 5.9.3
 
+  plugins/ai-github-models:
+    dependencies:
+      '@barezen/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.5.4
+        version: 5.9.3
+
   plugins/ai-review:
     dependencies:
       '@barezen/sdk':
@@ -166,22 +182,6 @@ importers:
       fast-xml-parser:
         specifier: ^4.4.0
         version: 4.5.7
-      zod:
-        specifier: ^3.23.8
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^20.14.0
-        version: 20.19.43
-      typescript:
-        specifier: ^5.5.4
-        version: 5.9.3
-
-  plugins/condition:
-    dependencies:
-      '@barezen/sdk':
-        specifier: workspace:*
-        version: link:../../packages/sdk
       zod:
         specifier: ^3.23.8
         version: 3.25.76
@@ -362,6 +362,38 @@ importers:
         specifier: ^5.5.4
         version: 5.9.3
 
+  plugins/hackernews:
+    dependencies:
+      '@barezen/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.5.4
+        version: 5.9.3
+
+  plugins/markdown-report:
+    dependencies:
+      '@barezen/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.5.4
+        version: 5.9.3
+
   plugins/retry:
     dependencies:
       '@barezen/sdk':
@@ -386,22 +418,6 @@ importers:
       fast-xml-parser:
         specifier: ^4.4.0
         version: 4.5.7
-      zod:
-        specifier: ^3.23.8
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^20.14.0
-        version: 20.19.43
-      typescript:
-        specifier: ^5.5.4
-        version: 5.9.3
-
-  plugins/schedule:
-    dependencies:
-      '@barezen/sdk':
-        specifier: workspace:*
-        version: link:../../packages/sdk
       zod:
         specifier: ^3.23.8
         version: 3.25.76

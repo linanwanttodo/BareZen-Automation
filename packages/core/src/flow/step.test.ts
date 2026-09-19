@@ -292,4 +292,36 @@ describe("StepExecutor", () => {
     await executor.execute(step, 0, ctx, reg);
     expect(receivedTimeout).toBe(5000);
   });
+
+  it("applies the executor default timeout to a step without one", async () => {
+    const reg = createPluginRegistry();
+    reg.register(makeDescriptor("rss"));
+    const ctx = createFlowContext("flow", makeGitHubContext());
+    let receivedTimeout: number | undefined;
+    const mgr: RuntimeManager = {
+      async execute(_d, _i, options) {
+        receivedTimeout = options?.timeoutMs;
+        return { success: true, data: {}, durationMs: 1 };
+      },
+    };
+    const executor = createStepExecutor(mgr, { defaultTimeoutMs: 30000 });
+    await executor.execute({ plugin: "rss" }, 0, ctx, reg);
+    expect(receivedTimeout).toBe(30000);
+  });
+
+  it("lets a step's own timeout override the default", async () => {
+    const reg = createPluginRegistry();
+    reg.register(makeDescriptor("rss"));
+    const ctx = createFlowContext("flow", makeGitHubContext());
+    let receivedTimeout: number | undefined;
+    const mgr: RuntimeManager = {
+      async execute(_d, _i, options) {
+        receivedTimeout = options?.timeoutMs;
+        return { success: true, data: {}, durationMs: 1 };
+      },
+    };
+    const executor = createStepExecutor(mgr, { defaultTimeoutMs: 30000 });
+    await executor.execute({ plugin: "rss", timeout: 1000 }, 0, ctx, reg);
+    expect(receivedTimeout).toBe(1000);
+  });
 });

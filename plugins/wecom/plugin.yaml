@@ -1,9 +1,9 @@
 name: wecom
 runtime: node
 entry: dist/index.js
-description: Send message via WeCom (企业微信) Webhook
+description: Send a markdown message to a WeCom (企业微信) group bot, splitting long text
 inputs:
   message: { required: true, type: string }
-
 outputs:
   sent: { type: boolean }
+  parts: { type: number, description: Number of messages sent after splitting }

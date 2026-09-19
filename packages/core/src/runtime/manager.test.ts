@@ -75,6 +75,20 @@ describe("RuntimeManager", () => {
     }
   });
 
+  it("reads the JSON message when a plugin also logs to stdout", async () => {
+    const entry = join(tmpDir, "noisy.js");
+    writeFileSync(
+      entry,
+      "process.stdout.write('warning: a dependency logged here\\n');process.stdout.write(JSON.stringify({success:true,data:{ok:1}}))",
+    );
+    const mgr = createRuntimeManager();
+    const result = await mgr.execute(makeNodeDescriptor(tmpDir, "noisy.js"), {});
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toEqual({ ok: 1 });
+    }
+  });
+
   it("returns non-zero-exit error when plugin exits non-zero", async () => {
     const entry = join(tmpDir, "exit.js");
     writeFileSync(entry, "process.stderr.write('boom');process.exit(2)");

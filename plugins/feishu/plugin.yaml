@@ -1,9 +1,9 @@
 name: feishu
 runtime: node
 entry: dist/index.js
-description: Send message via Feishu (飞书) Webhook
+description: Send a text message to a Feishu (飞书) custom bot, splitting long text
 inputs:
   message: { required: true, type: string }
-
 outputs:
   sent: { type: boolean }
+  parts: { type: number, description: Number of messages sent after splitting }

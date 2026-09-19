@@ -2,7 +2,7 @@
  * BareZen RSS Plugin — fetch and parse RSS feeds.
  */
 
-import { definePlugin } from "@barezen/sdk";
+import { definePlugin, fetchWithTimeout } from "@barezen/sdk";
 import { XMLParser } from "fast-xml-parser";
 import { z } from "zod";
 
@@ -35,7 +35,7 @@ export default definePlugin({
   }),
   async run(ctx) {
     ctx.logger.info(`Fetching RSS feed: ${ctx.inputs.url}`);
-    const response = await fetch(ctx.inputs.url);
+    const response = await fetchWithTimeout(ctx.inputs.url);
     if (!response.ok) {
       throw new Error(`Failed to fetch RSS feed: ${response.status} ${response.statusText}`);
     }
