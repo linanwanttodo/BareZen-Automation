@@ -27,3 +27,10 @@ export {
   fetchWithTimeout,
 } from "./http.js";
 export { splitText } from "./text.js";
+export {
+  chatCompletion,
+  DEFAULT_CHAT_BASE_URL,
+  resolveChatUrl,
+  type ChatMessage,
+  type ChatOptions,
+} from "./openai.js";

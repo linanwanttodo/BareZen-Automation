@@ -1,4 +1,4 @@
-import { definePlugin, fetchWithTimeout } from "@barezen/sdk";
+import { chatCompletion, definePlugin } from "@barezen/sdk";
 import { z } from "zod";
 
 export default definePlugin({
@@ -6,24 +6,14 @@ export default definePlugin({
   inputs: z.object({
     text: z.string(),
     model: z.string().default("gpt-4o-mini"),
+    baseURL: z.string().url().optional(),
   }),
   async run(ctx) {
-    const apiKey = ctx.secrets.require("OPENAI_API_KEY");
-    const res = await fetchWithTimeout("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: ctx.inputs.model,
-        messages: [{ role: "user", content: ctx.inputs.text }],
-      }),
+    const text = await chatCompletion({
+      model: ctx.inputs.model,
+      messages: [{ role: "user", content: ctx.inputs.text }],
+      ...(ctx.inputs.baseURL !== undefined ? { baseURL: ctx.inputs.baseURL } : {}),
     });
-    if (!res.ok) throw new Error(`AI API error: ${res.status}`);
-    const data = (await res.json()) as {
-      choices: { message: { content: string } }[];
-    };
-    return { text: data.choices[0]?.message.content ?? "" };
+    return { text };
   },
 });

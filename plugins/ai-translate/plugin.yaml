@@ -1,11 +1,12 @@
 name: ai-translate
 runtime: node
 entry: dist/index.js
-description: Translate text using AI
+description: Translate text via any OpenAI-compatible chat endpoint
 inputs:
   text: { required: true, type: string }
   from: { required: false, type: string }
   to: { required: true, type: string }
-  model: { required: false, type: string, default: gpt-4o-mini }
+  model: { required: false, type: string, default: gpt-4o-mini, description: Must exist at the chosen endpoint }
+  baseURL: { required: false, type: string, description: "Overrides OPENAI_API_BASE (default https://api.openai.com/v1)" }
 outputs:
-  result: { type: object }
+  text: { type: string }

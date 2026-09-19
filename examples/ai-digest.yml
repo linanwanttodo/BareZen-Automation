@@ -1,0 +1,35 @@
+# AI digest pipeline, exercised in CI against a local OpenAI-compatible mock so
+# the step is proven without a vendor key. See .github/workflows/ci.yml.
+#
+# Against a real provider, set OPENAI_API_BASE / OPENAI_API_KEY in the step's
+# environment and swap `model` for one that endpoint serves.
+
+plugins:
+  - hackernews
+  - markdown-report
+  - ai-summary
+
+flows:
+  digest:
+    - plugin: hackernews
+      inputs:
+        tag: front_page
+        limit: 6
+      output: stories
+
+    - plugin: markdown-report
+      input: { articles: stories.articles }
+      inputs:
+        heading: Hacker News front page
+        limit: 6
+      output: report_md
+
+    - plugin: ai-summary
+      input: { text: report_md.text }
+      inputs:
+        model: mock-model-1
+      output: summary
+
+settings:
+  defaultTimeout: 60000
+  logLevel: info

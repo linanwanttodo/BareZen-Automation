@@ -1,10 +1,11 @@
 name: ai-review
 runtime: node
 entry: dist/index.js
-description: Review code/text using AI
+description: Review code or text via any OpenAI-compatible chat endpoint
 inputs:
   content: { required: true, type: string }
   type: { required: false, type: string, default: code }
-  model: { required: false, type: string, default: gpt-4o-mini }
+  model: { required: false, type: string, default: gpt-4o-mini, description: Must exist at the chosen endpoint }
+  baseURL: { required: false, type: string, description: "Overrides OPENAI_API_BASE (default https://api.openai.com/v1)" }
 outputs:
-  result: { type: object }
+  text: { type: string }

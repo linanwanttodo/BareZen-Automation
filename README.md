@@ -123,7 +123,7 @@ barezen-automation/
 | Content | `rss`, `atom`, `hackernews`, `crawler` |
 | Notification | `email`, `telegram`, `discord`, `slack`, `wecom`, `feishu`, `webhook` |
 | GitHub | `github-sync`, `github-star`, `github-release`, `github-issue`, `github-pr`, `github-label` |
-| AI | `ai-summary`, `ai-translate`, `ai-review`, `ai-classify`, `ai-chat` (need `OPENAI_API_KEY`) · `ai-github-models` (needs no key, but returns HTTP 410 while GitHub retires Models) |
+| AI | `ai-summary`, `ai-translate`, `ai-review`, `ai-classify`, `ai-chat` — any OpenAI-compatible endpoint via `OPENAI_API_BASE` · `ai-github-models` (needs no key, but returns HTTP 410 while GitHub retires Models) |
 | Utility | `retry`, `text-template`, `markdown-report` |
 
 ## Development

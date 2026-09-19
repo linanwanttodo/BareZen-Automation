@@ -1,10 +1,11 @@
 name: ai-chat
 runtime: node
 entry: dist/index.js
-description: Chat with AI model
+description: Chat with any OpenAI-compatible endpoint
 inputs:
-  messages: { required: true, type: array }
-  model: { required: false, type: string, default: gpt-4o-mini }
+  messages: { required: true, type: array, description: "Objects of {role: system|user|assistant, content}" }
+  model: { required: false, type: string, default: gpt-4o-mini, description: Must exist at the chosen endpoint }
   systemPrompt: { required: false, type: string }
+  baseURL: { required: false, type: string, description: "Overrides OPENAI_API_BASE (default https://api.openai.com/v1)" }
 outputs:
-  result: { type: object }
+  text: { type: string }

@@ -62,6 +62,8 @@ jobs:
 
           # Only needed if a flow uses the OpenAI-compatible ai-* plugins.
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Point them at any compatible server; defaults to api.openai.com.
+          OPENAI_API_BASE: ${{ vars.OPENAI_API_BASE }}
 
           # Each notify plugin reads its own variable name, so one flow can fan
           # out to several channels.

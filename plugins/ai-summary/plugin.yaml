@@ -1,9 +1,10 @@
 name: ai-summary
 runtime: node
 entry: dist/index.js
-description: Summarize text using AI
+description: Summarize text via any OpenAI-compatible chat endpoint
 inputs:
   text: { required: true, type: string }
-  model: { required: false, type: string, default: gpt-4o-mini }
+  model: { required: false, type: string, default: gpt-4o-mini, description: Must exist at the chosen endpoint }
+  baseURL: { required: false, type: string, description: "Overrides OPENAI_API_BASE (default https://api.openai.com/v1)" }
 outputs:
   text: { type: string }

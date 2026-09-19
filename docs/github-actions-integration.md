@@ -238,13 +238,19 @@ Add these in your repository settings (Settings → Secrets and variables → Ac
 | `SMTP_USER` / `SMTP_PASS` | Email plugin | Secret |
 | `SMTP_HOST` | Email plugin, unless `smtpHost` is passed inline | Variable |
 | `OPENAI_API_KEY` | the OpenAI-compatible ai-* plugins only | Secret |
+| `OPENAI_API_BASE` | base URL for every ai-* plugin, e.g. `https://openrouter.ai/api/v1` or a local `http://127.0.0.1:11434/v1`; defaults to `https://api.openai.com/v1`. A step's `baseURL` input overrides it | Variable |
 | `BAREZEN_HTTP_TIMEOUT` | per-request outbound ceiling in ms (default 30000) | Variable |
 
-`ai-github-models` authenticates with the workflow's own `GITHUB_TOKEN` and
-stores no third-party key — but **verified 2026-09-19 it returns HTTP 410**
-("scheduled retirement brownout") while GitHub shuts Models down, so no flow
-should depend on it yet. The OpenAI-compatible `ai-*` plugins with
-`OPENAI_API_KEY` are the working path today.
+The `ai-*` plugins speak the OpenAI `/chat/completions` protocol against
+`OPENAI_API_BASE`, so any compatible server works: OpenAI itself, OpenRouter,
+DeepSeek, Qwen, or a local Ollama/llama.cpp listener. `ai-github-models` is the
+same protocol against GitHub's endpoint and needs no third-party key — but
+**verified 2026-09-19 it returns HTTP 410** ("scheduled retirement brownout")
+while GitHub shuts Models down, so nothing should depend on it yet.
+
+`.github/workflows/ci.yml` runs the AI step against `scripts/mock-openai-server.mjs`,
+which proves `hackernews -> markdown-report -> ai-summary` end to end with no
+vendor key; the mock rejects a prompt that does not carry the expected text.
 
 ## Accessing GitHub Context in Plugins
 

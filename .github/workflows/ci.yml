@@ -64,3 +64,31 @@ jobs:
           config: examples/smoke.yml
           flow: gating
           log-level: info
+
+  # Proves the AI step end to end with no vendor key. The mock rejects any
+  # request whose prompt lacks the expected text, so a green job means real
+  # upstream data crossed the model boundary.
+  ai-step:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start a local OpenAI-compatible endpoint
+        run: |
+          PORT=8787 MOCK_REQUIRE_SUBSTRING="Hacker News" \
+            node scripts/mock-openai-server.mjs > mock.log 2>&1 &
+          sleep 1
+          curl -sS -o /dev/null "http://127.0.0.1:8787/v1/chat/completions" || true
+
+      - name: Run the digest pipeline against it
+        uses: ./
+        with:
+          config: examples/ai-digest.yml
+          log-level: info
+        env:
+          OPENAI_API_BASE: http://127.0.0.1:8787/v1
+          OPENAI_API_KEY: ci-placeholder
+
+      - name: Show what the endpoint received
+        if: always()
+        run: cat mock.log

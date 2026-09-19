@@ -1,10 +1,11 @@
 name: ai-classify
 runtime: node
 entry: dist/index.js
-description: Classify text into categories using AI
+description: Classify text into one of the given labels via any OpenAI-compatible endpoint
 inputs:
   text: { required: true, type: string }
-  categories: { required: true, type: array }
-  model: { required: false, type: string, default: gpt-4o-mini }
+  categories: { required: true, type: array, description: Candidate labels; the reply is matched against them }
+  model: { required: false, type: string, default: gpt-4o-mini, description: Must exist at the chosen endpoint }
+  baseURL: { required: false, type: string, description: "Overrides OPENAI_API_BASE (default https://api.openai.com/v1)" }
 outputs:
-  result: { type: object }
+  category: { type: string, description: The chosen label, normalised to the caller's spelling }
