@@ -90,6 +90,11 @@ export interface LoggerOptions {
   forceActionsEnv?: boolean;
   /** Override the console sink (mainly for tests). */
   sink?: ConsoleSink;
+  /**
+   * Rewrite every formatted line before it is written, e.g. to replace resolved
+   * secret values with `***`. Applied to the whole line, so metadata included.
+   */
+  redact?: (text: string) => string;
 }
 
 /**
@@ -117,7 +122,10 @@ export function createLogger(options: LoggerOptions = {}): Logger {
 
   function emit(l: LogLevel, message: string, meta: LogMeta | undefined): void {
     if (!shouldEmit(l)) return;
-    const formatted = formatMessage(message, scope, meta);
+    const formatted =
+      options.redact === undefined
+        ? formatMessage(message, scope, meta)
+        : options.redact(formatMessage(message, scope, meta));
     switch (l) {
       case "debug":
         sink.debug(formatted);
@@ -145,6 +153,7 @@ export function createLogger(options: LoggerOptions = {}): Logger {
         scope: scope !== undefined && scope !== "" ? `${scope}:${childScope}` : childScope,
         forceActionsEnv: inActions,
         sink,
+        ...(options.redact !== undefined ? { redact: options.redact } : {}),
       }),
     group: (name) => sink.group(formatMessage(name, scope, undefined)),
     groupEnd: () => sink.groupEnd(),

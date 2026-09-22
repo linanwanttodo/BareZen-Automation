@@ -9,8 +9,9 @@
   },
   "dependencies": {
     "@barezen/sdk": "workspace:*",
-    "zod": "^3.23.8",
-    "cheerio": "^1.0.0"
+    "cheerio": "^1.0.0",
+    "node-html-parser": "^9.0.4",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

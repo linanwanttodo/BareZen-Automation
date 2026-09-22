@@ -56,8 +56,8 @@ jobs:
         env:
           BAREZEN_HTTP_TIMEOUT: ${{ vars.BAREZEN_HTTP_TIMEOUT }}
 
-          # ai-github-models authenticates with this, so an AI step needs no
-          # third-party key at all.
+          # Used by the github-* plugins. The ai-* plugins need OPENAI_API_KEY
+          # (or an OPENAI_API_BASE whose server skips auth).
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
           # Only needed if a flow uses the OpenAI-compatible ai-* plugins.

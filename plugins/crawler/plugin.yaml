@@ -1,9 +1,11 @@
 name: crawler
 runtime: node
 entry: dist/index.js
-description: Crawl web pages and extract data via CSS selectors
+description: Fetch a page and extract fields with CSS selectors
 inputs:
   url: { required: true, type: string }
-  selectors: { required: true, type: object }
+  selectors: { required: true, type: object, description: "name -> CSS selector; first match's text wins" }
 outputs:
-  result: { type: object }
+  fields: { type: object, description: Each selector name mapped to its trimmed text, or null when nothing matched }
+  url: { type: string }
+  matchedCount: { type: number, description: How many selectors produced text }

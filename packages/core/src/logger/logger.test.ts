@@ -153,4 +153,29 @@ describe("Logger", () => {
       expect(() => log.info("via actions core")).not.toThrow();
     });
   });
+
+  describe("redaction", () => {
+    const redact = (text: string) => text.replaceAll("s3cr3t", "***");
+
+    it("scrubs the message", () => {
+      const sink = makeCapturingSink();
+      createLogger({ sink, redact }).info("token is s3cr3t");
+      expect(sink.records[0]?.msg).toBe("token is ***");
+    });
+
+    it("scrubs serialized metadata too", () => {
+      const sink = makeCapturingSink();
+      createLogger({ sink, redact }).warn("failed", { headers: "s3cr3t" });
+      expect(sink.records[0]?.msg).not.toContain("s3cr3t");
+      expect(sink.records[0]?.msg).toContain("***");
+    });
+
+    it("applies on child loggers", () => {
+      const sink = makeCapturingSink();
+      createLogger({ sink, redact, scope: "root" })
+        .child("step")
+        .error("child saw s3cr3t");
+      expect(sink.records[0]?.msg).toBe("[root:step] child saw ***");
+    });
+  });
 });

@@ -226,7 +226,7 @@ Add these in your repository settings (Settings → Secrets and variables → Ac
 
 | Variable | Used by | Kind |
 | -------- | ------- | ---- |
-| `GITHUB_TOKEN` | GitHub plugins and `ai-github-models` (auto-provided by `github.token`) | Secret |
+| `GITHUB_TOKEN` | GitHub plugins (auto-provided by `github.token`) | Secret |
 | `TELEGRAM_BOT_TOKEN` | Telegram plugin | Secret |
 | `TELEGRAM_CHAT_ID` | Telegram plugin, unless `chatId` is passed inline | Variable |
 | `DISCORD_WEBHOOK_URL` | Discord plugin | Secret |
@@ -243,10 +243,9 @@ Add these in your repository settings (Settings → Secrets and variables → Ac
 
 The `ai-*` plugins speak the OpenAI `/chat/completions` protocol against
 `OPENAI_API_BASE`, so any compatible server works: OpenAI itself, OpenRouter,
-DeepSeek, Qwen, or a local Ollama/llama.cpp listener. `ai-github-models` is the
-same protocol against GitHub's endpoint and needs no third-party key — but
-**verified 2026-09-19 it returns HTTP 410** ("scheduled retirement brownout")
-while GitHub shuts Models down, so nothing should depend on it yet.
+DeepSeek, Qwen, or a local Ollama/llama.cpp listener. GitHub Models speaks the
+same protocol too, but **verified 2026-09-19 it returns HTTP 410** ("scheduled
+retirement brownout") while GitHub shuts it down, so no plugin targets it.
 
 `.github/workflows/ci.yml` runs the AI step against `scripts/mock-openai-server.mjs`,
 which proves `hackernews -> markdown-report -> ai-summary` end to end with no

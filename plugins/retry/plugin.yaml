@@ -1,9 +1,0 @@
-name: retry
-runtime: node
-entry: dist/index.js
-description: Retry configuration helper
-inputs:
-  attempts: { required: false, type: number, default: 3 }
-  delay: { required: false, type: number, default: 1000 }
-outputs:
-  result: { type: object }

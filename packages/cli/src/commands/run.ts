@@ -128,6 +128,7 @@ export async function runAutomation(options: RunOptions): Promise<number> {
     level: resolveLogLevel(cliLevel, undefined),
     scope: "cli",
   });
+  let mask: (text: string) => string = (text) => text;
 
   try {
     // 1. GitHub context
@@ -144,9 +145,28 @@ export async function runAutomation(options: RunOptions): Promise<number> {
     });
     logger.info(`Loaded config with ${config.plugins.length} plugins, ${Object.keys(config.flows).length} flows`);
 
-    // 3. Resolve secrets in config
+    // 3. Pick the flows first, then resolve secrets for those alone: running
+    // one flow must not demand the credentials of the others.
+    const flowNames =
+      options.flow !== undefined && options.flow !== ""
+        ? [options.flow]
+        : Object.keys(config.flows);
+
+    const selected = flowNames.flatMap((name) =>
+      config.flows[name] !== undefined ? [[name, config.flows[name]]] : [],
+    );
+
     const secretResolver = createSecretResolver();
-    const resolvedConfig = secretResolver.resolve(config);
+    const resolvedConfig: AutomationConfig = secretResolver.resolve({
+      ...config,
+      flows: Object.fromEntries(selected),
+    });
+    mask = (text) => secretResolver.mask(text);
+    logger = createLogger({
+      level: resolveLogLevel(cliLevel, config.settings?.logLevel),
+      scope: "cli",
+      redact: mask,
+    });
 
     // 4. Load plugins
     const pluginDirs = resolvePluginDirs(options.plugins, config.settings?.pluginDir);
@@ -166,11 +186,6 @@ export async function runAutomation(options: RunOptions): Promise<number> {
       defaultTimeoutMs:
         config.settings?.defaultTimeout ?? DEFAULT_STEP_TIMEOUT_MS,
     });
-
-    const flowNames =
-      options.flow !== undefined
-        ? [options.flow]
-        : Object.keys(resolvedConfig.flows);
 
     const results: FlowResult[] = [];
     for (const flowName of flowNames) {
@@ -205,7 +220,7 @@ export async function runAutomation(options: RunOptions): Promise<number> {
 
     return summary.success ? 0 : 1;
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = mask(err instanceof Error ? err.message : String(err));
     logger.error(`Automation failed: ${message}`);
     actionsCore.setFailed(message);
     return 1;
